@@ -3,6 +3,8 @@
 #include <map>
 #include <set>
 #include <iostream>
+#include <sstream>
+#include <exception>
 
 using Synonyms = std::map<std::string, std::set<std::string>>;
 
@@ -17,6 +19,15 @@ size_t GetSynonymsCount(Synonyms& synonyms, const std::string& first_word) {
 
 bool AreSynonyms(Synonyms& synonyms, const std::string& first_word, const std::string& second_word) {
 	return synonyms[first_word].count(second_word) == 1;
+}
+
+template <class T, class U>
+void Assertion(const T& t, const U& u, const std::string& hint) {
+	if (t != u) {
+		std::ostringstream os;
+		os << "Assertion failed: " << t << " != " << u << ". Hint: " << hint;
+		throw std::runtime_error(os.str());
+	}
 }
 
 void TestAddSynonyms() {
@@ -35,7 +46,7 @@ void TestAddSynonyms() {
 			{"c", {"b"}}
 		};
 		AddSynonyms(synonyms, "a", "c");
-		
+
 		Synonyms expected = {
 			{"a", {"b", "c"}},
 			{"b", {"a", "c"}},
@@ -49,7 +60,7 @@ void TestAddSynonyms() {
 void TestCount() {
 	{
 		Synonyms empty;
-		assert(GetSynonymsCount(empty, "a") == 0);
+		Assertion(GetSynonymsCount(empty, "a"), 0, "count for empty");
 	}
 	{
 		Synonyms synonyms = {
@@ -57,9 +68,9 @@ void TestCount() {
 			{"b", {"a"}},
 			{"c", {"a"}}
 		};
-		assert(GetSynonymsCount(synonyms, "a") == 2);
-		assert(GetSynonymsCount(synonyms, "b") == 1);
-		assert(GetSynonymsCount(synonyms, "z") == 0);
+		Assertion(GetSynonymsCount(synonyms, "a"), 2, "count for a");
+		Assertion(GetSynonymsCount(synonyms, "b"), 1, "count for b");
+		Assertion(GetSynonymsCount(synonyms, "z"), 0, "count for z");
 	}
 	std::cout << "TestSynonymsCount = OK" << std::endl;
 }
@@ -96,7 +107,9 @@ void testAll() {
 
 int main() {
 	testAll();
-	
+
+	return 0;
+
 	int q = 0;
 	std::cin >> q;
 

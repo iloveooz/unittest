@@ -1,4 +1,3 @@
-#include <cassert>
 #include <string>
 #include <map>
 #include <set>
@@ -22,12 +21,16 @@ bool AreSynonyms(Synonyms& synonyms, const std::string& first_word, const std::s
 }
 
 template <class T, class U>
-void Assertion(const T& t, const U& u, const std::string& hint) {
+void AssertEqual(const T& t, const U& u, const std::string& hint) {
 	if (t != u) {
 		std::ostringstream os;
-		os << "Assertion failed: " << t << " != " << u << ". Hint: " << hint;
+		os << "AssertEqual failed: " << t << " != " << u << ". Hint: " << hint;
 		throw std::runtime_error(os.str());
 	}
+}
+
+void Assert(bool value, const std::string& hint) {
+	AssertEqual(value, true, hint);
 }
 
 void TestAddSynonyms() {
@@ -37,7 +40,7 @@ void TestAddSynonyms() {
 		const Synonyms expected = {
 			{"a", {"b"}}, {"b", {"a"}}
 		};
-		assert(empty == expected);
+		Assert(empty == expected, "empty == expected");
 	}
 	{
 		Synonyms synonyms = {
@@ -52,7 +55,7 @@ void TestAddSynonyms() {
 			{"b", {"a", "c"}},
 			{"c", {"b", "a"}}
 		};
-		assert(synonyms == expected);
+		Assert(synonyms == expected, "synonyms == expected");
 	}
 	std::cout << "TestAddSynonyms = OK" << std::endl;
 }
@@ -60,7 +63,7 @@ void TestAddSynonyms() {
 void TestCount() {
 	{
 		Synonyms empty;
-		Assertion(GetSynonymsCount(empty, "a"), 0, "count for empty");
+		AssertEqual(GetSynonymsCount(empty, "a"), 0, "count for empty");
 	}
 	{
 		Synonyms synonyms = {
@@ -68,9 +71,9 @@ void TestCount() {
 			{"b", {"a"}},
 			{"c", {"a"}}
 		};
-		Assertion(GetSynonymsCount(synonyms, "a"), 2, "count for a");
-		Assertion(GetSynonymsCount(synonyms, "b"), 1, "count for b");
-		Assertion(GetSynonymsCount(synonyms, "z"), 0, "count for z");
+		AssertEqual(GetSynonymsCount(synonyms, "a"), 2, "count for a");
+		AssertEqual(GetSynonymsCount(synonyms, "b"), 1, "count for b");
+		AssertEqual(GetSynonymsCount(synonyms, "z"), 0, "count for z");
 	}
 	std::cout << "TestSynonymsCount = OK" << std::endl;
 }
@@ -78,8 +81,8 @@ void TestCount() {
 void TestAreSynonyms() {
 	{
 		Synonyms empty;
-		assert(!(AreSynonyms(empty, "a", "b")));
-		assert(!(AreSynonyms(empty, "b", "a")));
+		Assert((AreSynonyms(empty, "a", "b")), "empty a b");
+		Assert(!(AreSynonyms(empty, "b", "a")), "empty b a");
 	}
 	{
 		Synonyms synonyms = {
@@ -87,22 +90,31 @@ void TestAreSynonyms() {
 			{"b", {"a"}},
 			{"c", {"a"}}
 		};
-		assert(AreSynonyms(synonyms, "a", "b"));
-		assert(AreSynonyms(synonyms, "b", "a"));
+		Assert(AreSynonyms(synonyms, "a", "b"), "syn a b");
+		Assert(AreSynonyms(synonyms, "b", "a"), "syn b a");
 
-		assert(AreSynonyms(synonyms, "a", "c"));
-		assert(AreSynonyms(synonyms, "c", "a"));
+		Assert(AreSynonyms(synonyms, "a", "c"), "syn a c");
+		Assert(AreSynonyms(synonyms, "c", "a"), "syn c a");
 
-		assert(!AreSynonyms(synonyms, "b", "c"));
-		assert(!AreSynonyms(synonyms, "c", "b"));
+		Assert(!AreSynonyms(synonyms, "b", "c"), "syn b c");
+		Assert(!AreSynonyms(synonyms, "c", "b"), "syn c b");
 	}
 	std::cout << "TestAreSynonyms = OK" << std::endl;
 }
 
+template <class TestFunc>
+void RunTest(TestFunc function, const std::string& fname) {
+	try {
+		function();
+	} catch (std::runtime_error& e) {
+		std::cout << fname << " fail: " << e.what() << std::endl;
+	}
+}
+
 void testAll() {
-	TestCount();
-	TestAreSynonyms();
-	TestAddSynonyms();
+	RunTest(TestCount, "TestCount");
+	RunTest(TestAreSynonyms, "TestAreSynonyms");
+	RunTest(TestAddSynonyms, "TestAddSynonyms");
 }
 
 int main() {

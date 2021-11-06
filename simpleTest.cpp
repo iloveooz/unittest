@@ -99,20 +99,34 @@ void TestAreSynonyms() {
 	}
 }
 
-template <class TestFunc>
-void RunTest(TestFunc function, const std::string& fname) {
-	try {
-		function();
-		std::cerr << fname << " OK" << std::endl;
-	} catch (std::runtime_error& e) {
-		std::cerr << fname << " fail: " << e.what() << std::endl;
+class TestRunner {
+public:
+	~TestRunner() {
+		if (fail_count > 0) {
+			std::cerr << fail_count << " tests failed. Terminate!" << std::endl;
+			exit(1);
+		}
 	}
-}
+
+	template <class TestFunc>
+	void RunTest(TestFunc function, const std::string& fname) {
+		try {
+			function();
+			std::cerr << fname << " OK" << std::endl;
+		} catch (std::runtime_error& e) {
+			++fail_count;
+			std::cerr << fname << " fail: " << e.what() << std::endl;
+		}
+	}
+private:
+	int fail_count = 0;
+};
 
 void testAll() {
-	RunTest(TestCount, "TestCount");
-	RunTest(TestAreSynonyms, "TestAreSynonyms");
-	RunTest(TestAddSynonyms, "TestAddSynonyms");
+	TestRunner tr;
+	tr.RunTest(TestCount, "TestCount");
+	tr.RunTest(TestAreSynonyms, "TestAreSynonyms");
+	tr.RunTest(TestAddSynonyms, "TestAddSynonyms");
 }
 
 int main() {
